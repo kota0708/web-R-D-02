@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "sourceMap": true,
+    "target": "es5",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "es2015",
+    "rootDir": "src",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "jsx": "react",
+    "lib": ["es2019", "dom"],
+    "paths": {
+      "*": ["@types/*"]
+    }
+  },
+  "include": ["./src", "node_modules/@types"]
+}

@@ -1,0 +1,135 @@
+/* 画像サイズによってフォントサイズを変える */
+@function getVw($size: 10, $viewport: $X_LARGE_SCREEN_WIDTH) {
+  @return $size / $viewport * 100vw;
+}
+
+/* 画像サイズによってフォントサイズを変える */
+@mixin fontVw($fontSize: 10, $viewport: $X_LARGE_SCREEN_WIDTH) {
+  font-size: $fontSize * 1px;
+  font-size: $fontSize / $viewport * 100vw;
+}
+
+/* font-size, line-height, letter-spacingを出力 */
+@mixin font($fontSize, $lineHeight: 0, $letterSpacing: 0) {
+  @include fontVw($fontSize, $X_LARGE_SCREEN_WIDTH);
+
+  @if ($lineHeight!=0) {
+    line-height: ($lineHeight / $fontSize);
+  }
+
+  @if ($letterSpacing!=0) {
+    letter-spacing: ($letterSpacing / $fontSize) * 1em;
+  }
+
+  @include largeScreenWidthLess() {
+    @include fontVw($fontSize, $SMALL_SCREEN_WIDTH);
+  }
+}
+
+/// strip-unit
+/// 数値から単位を除外する
+///
+/// @param {String} $val 単位を除外する文字列
+///
+@function stripUnit($val) {
+  @if (type-of($val) == 'number' and not unitless($val)) {
+    @return $val / ($val * 0 + 1);
+  }
+
+  @return $val;
+}
+
+/// px2rem
+/// 単位を `px` から `rem` に変換する
+///
+/// @param {String} $val 単位に `px` が指定されている文字列
+///
+/// @example scss
+///   .foo {
+///     font-size: px2rem(16px); // 1.6rem
+///   }
+///
+@function px2rem($val) {
+  $result: $val;
+
+  @if (not(unit($val) == 'px')) {
+    @return $result;
+  }
+
+  $result: stripunit($val) / $BASE_FONT_SIZE * 1rem;
+
+  @return $result;
+}
+
+/// px2em
+/// `px` から `em` に変換
+///
+/// @param {String} $val 単位に `px` が指定されている文字列
+/// @param {Number} [$parent-number] 割る数値 初期値は $BASE_FONT_SIZE
+///
+/// @example scss
+///   .foo {
+///     font-size: px2em(16px); // 1.6em
+///     font-size: px2em(16px, 32); // 0.5em
+///   }
+///
+@function px2em($val, $parent-number: $BASE_FONT_SIZE) {
+  $result: $val;
+
+  @if (not(unit($val) == 'px')) {
+    @return $result;
+  }
+
+  $result: stripunit($val) / $parent-number * 1em;
+
+  @return $result;
+}
+
+/// leap
+/// 引数に渡されたデータを元に線形補完する
+///
+/// @param {String} $propaty CSS プロパティの文字列
+/// @param {String} $maxValue CSS のバリューの最大値
+/// @param {String} $minValue CSS のバリューの最小値
+/// @param {String} $maxViewport 補完を実行する画面の幅の最大値
+/// @param {String} $minViewport 補完を実行する画面の幅の最小値
+/// @param {String} $px2rem calc が効かない場合の単位を rem にするかの真偽値
+///
+/// @example scss
+///   .foo {
+///     @include leap('font-size', 30, 15, 1000, 500);
+///     // ↑
+///     // font-size: 30px;
+///     // font-size: calc(15px + ((1vw - 5px) * 3));
+///
+///     @include leap('font-size', 30, 15, 1000, 500, true);
+///     // ↑
+///     // font-size: 3rem;
+///     // font-size: calc(15px + ((1vw - 5px) * 3));
+///   }
+///
+@mixin leap(
+  $propaty,
+  $maxValue,
+  $minValue,
+  $maxViewport,
+  $minViewport,
+  $px2rem: false
+) {
+  $maxValue: stripunit($maxValue);
+  $minValue: stripunit($minValue);
+  $maxViewport: stripunit($maxViewport);
+  $minViewport: stripunit($minViewport);
+
+  $vwRatio: 100 * ($maxValue - $minValue) / ($maxViewport - $minViewport);
+  $vwOffset: $minViewport / 100 * 1px;
+
+  @if ($px2rem) {
+    #{$propaty}: px2rem($maxValue * 1px);
+  }
+  @else {
+    #{$propaty}: #{$maxValue * 1px};
+  }
+
+  #{$propaty}: calc(#{$minValue * 1px} + ((1vw - #{$vwOffset}) * #{$vwRatio}));
+}
