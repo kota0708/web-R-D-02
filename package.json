@@ -20,8 +20,14 @@
     }
   },
   "lint-staged": {
-    "*.ts": ["yarn lint:script", "git add --force"],
-    "*.scss": ["yarn lint:style", "git add --force"]
+    "*.ts": [
+      "yarn lint:script",
+      "git add --force"
+    ],
+    "*.scss": [
+      "yarn lint:style",
+      "git add --force"
+    ]
   },
   "author": "kota",
   "license": "ISC",
@@ -102,14 +108,18 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
+    "@hot-loader/react-dom": "^16.13.0",
     "@types/react": "^16.9.35",
     "@types/react-dom": "^16.9.8",
-    "@hot-loader/react-dom": "^16.13.0",
     "gsap": "^3.3.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-hot-loader": "^4.12.21",
-    "ress": "^2.0.4"
+    "ress": "^2.0.4",
+    "three": "^0.118.3"
   },
-  "browserslist": ["last 2 versions", "ie 9"]
+  "browserslist": [
+    "last 2 versions",
+    "ie 9"
+  ]
 }
