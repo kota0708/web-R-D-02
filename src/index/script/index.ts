@@ -1,7 +1,9 @@
 import * as THREE from 'Three';
-import Stats from 'three/examples/jsm/libs/stats.module';
+import Stats from 'stats.js';
+import gsap from 'gsap';
 
 import { checkOddNumber } from '../../shared/scripts/_checkoddNumber';
+import { sleep } from '../../shared/scripts/_sleep';
 
 import { TImages } from './type/_data';
 import { images } from './constants/_data';
@@ -25,6 +27,7 @@ class Index {
   private scene: THREE.Scene;
   private light: THREE.DirectionalLight;
   private data: TImages[][][];
+  private stats: Stats;
 
   private count: number;
 
@@ -56,13 +59,11 @@ class Index {
 
     this.light = new THREE.DirectionalLight(0xffffff);
 
-    this.onResize = this.onResize.bind(this);
-  }
+    this.stats = new Stats();
+    this.stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+    document.body.appendChild(this.stats.dom);
 
-  private sleep(num: number): Promise<unknown> {
-    return new Promise((resolve: (value?: unknown) => void) => {
-      setTimeout(() => resolve(), num);
-    });
+    this.onResize = this.onResize.bind(this);
   }
 
   public async init(): Promise<void> {
@@ -78,7 +79,7 @@ class Index {
     await Promise.all(this.promises);
 
     // 少し時間を開ける。
-    await this.sleep(100);
+    await sleep(100);
 
     // テクスチャーを描画させる
     this.setTexture();
@@ -86,7 +87,9 @@ class Index {
     this.onListener();
 
     // リクエストアニメーションフレームを回す。
-    this.tick();
+
+    gsap.ticker.add(() => this.tick());
+    gsap.ticker.fps(60);
   }
 
   private onListener(): void {
@@ -201,7 +204,7 @@ class Index {
             // 前に置いてある画像の高さの総合 + 間隔
             let h = 0;
 
-            // 過去の画像の高さを足す。
+            // 前の画像の高さを足す。
             for (let t = 0; t < ii; t++) {
               h = h + r[t][iii].height + intervalHeight * 2;
             }
@@ -230,13 +233,13 @@ class Index {
   }
 
   private tick(): void {
-    // this.stats.begin();
-    requestAnimationFrame(() => this.tick());
+    // requestAnimationFrame(() => this.tick());
+
+    this.stats.begin();
     this.renderer.clear();
 
     this.renderer.render(this.scene, this.camera);
-    // this.renderer.render(this.scene3D, this.camera3D);
-    // this.stats.end();
+    this.stats.end();
   }
 }
 
