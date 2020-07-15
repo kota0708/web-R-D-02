@@ -2,11 +2,17 @@ import * as THREE from 'Three';
 import Stats from 'stats.js';
 import gsap from 'gsap';
 
+import vert from './gl/vertexShader.vert';
+import frag from './gl/fragmentShader.frag';
+
 import { checkOddNumber } from '../../shared/scripts/_checkoddNumber';
 import { sleep } from '../../shared/scripts/_sleep';
 
 import { TImages } from './type/_data';
 import { images } from './constants/_data';
+
+console.log(vert);
+console.log(frag);
 
 // 画像の横幅
 const imageWidth = 500;

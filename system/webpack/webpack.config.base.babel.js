@@ -9,7 +9,7 @@ glob
   .sync(`./${SRC}/**/${EXTENSION_JS}`, {
     ignore: `./${SRC}/**/_${EXTENSION_JS}`
   })
-  .map(file => {
+  .map((file) => {
     const regEx = new RegExp(`./${SRC}/`);
     // `./src/`の文字列を取り除く
     const key = file
@@ -24,7 +24,7 @@ glob
   .sync(`./${SRC}/**/${EXTENSION_TSX}`, {
     ignore: `./${SRC}/**/react/**/${EXTENSION_TSX}`
   })
-  .map(file => {
+  .map((file) => {
     const regEx = new RegExp(`./src/`);
     const key = file
       .replace(regEx, '')
@@ -46,6 +46,11 @@ export default {
         test: /\.(ts|tsx)$/,
         exclude: /node_modules/,
         loader: 'ts-loader'
+      },
+      {
+        test: /\.(vert|frag|glsl)$/i,
+        use: [{ loader: 'raw-loader' }, { loader: 'glslify-loader' }],
+        exclude: /node_modules/
       },
       {
         enforce: 'pre',
