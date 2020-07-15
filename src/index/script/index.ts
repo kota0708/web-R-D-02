@@ -6,7 +6,14 @@ import { checkOddNumber } from '../../shared/scripts/_checkoddNumber';
 import { TImages } from './type/_data';
 import { images } from './constants/_data';
 
-const interval = 80;
+// 画像の横幅
+const imageWidth = 500;
+
+// 画像の縦の間隔
+const intervalHeight = 80;
+
+// 画像の横の間隔
+const intervalWidth = 160;
 
 class Index {
   private width: number;
@@ -18,6 +25,8 @@ class Index {
   private scene: THREE.Scene;
   private light: THREE.DirectionalLight;
   private data: TImages[][][];
+
+  private count: number;
 
   private promises: Promise<unknown>[];
 
@@ -43,7 +52,11 @@ class Index {
       10000
     );
 
+    this.count = 0;
+
     this.light = new THREE.DirectionalLight(0xffffff);
+
+    this.onResize = this.onResize.bind(this);
   }
 
   private sleep(num: number): Promise<unknown> {
@@ -55,7 +68,7 @@ class Index {
   public async init(): Promise<void> {
     this.renderer.setSize(this.width, this.height);
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setClearColor(0x000000, 1);
+    this.renderer.setClearColor(0xffffff, 1);
     this.renderer.autoClear = false;
 
     // 画像の読み込みのデータを取得
@@ -70,17 +83,34 @@ class Index {
     // テクスチャーを描画させる
     this.setTexture();
 
+    this.onListener();
+
     // リクエストアニメーションフレームを回す。
     this.tick();
+  }
+
+  private onListener(): void {
+    window.addEventListener('resize', this.onResize);
+  }
+
+  // リサイズイベント
+  private onResize(): void {
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+
+    this.renderer.setSize(this.width, this.height);
+
+    this.camera.aspect = this.width / this.height;
+    this.camera.updateProjectionMatrix();
   }
 
   // 描画するデータをまとめる。
   private setData(): void {
     this.data.forEach((r: TImages[][]) => {
       // 横列分
-      return r.forEach((rr: TImages[], i: number) => {
+      r.forEach((rr: TImages[], i: number) => {
         // 縦列分
-        return rr.forEach((c: TImages) => {
+        rr.forEach((c: TImages) => {
           // 画像の読み込みをするのでPromiseを返すようにする。
           const result = new Promise((resolve: (value?: unknown) => void) => {
             // 画像の読み込み
@@ -95,10 +125,15 @@ class Index {
                 const rate = texture.image.height / texture.image.width;
 
                 // 画像の高さを取得
-                const height = 500 * rate;
+                const height = imageWidth * rate;
 
                 // イタポリ
-                const geometry = new THREE.PlaneGeometry(500, height, 1, 1);
+                const geometry = new THREE.PlaneGeometry(
+                  imageWidth,
+                  height,
+                  1,
+                  1
+                );
 
                 // 描画するpolygonを取得
                 const polygon = new THREE.Mesh(geometry, material);
@@ -129,7 +164,19 @@ class Index {
 
   // テクスチャーを描画
   private setTexture() {
+    console.log(this.data);
+
     this.data.forEach((r: TImages[][], i: number) => {
+      console.log(`${i} ${this.count}`);
+
+      // 中央を起点にするためのindex値
+      const index = checkOddNumber(i) ? i - this.count : (i - this.count) * -1;
+
+      // 計算するためのカウントアップ
+      if (!checkOddNumber(i) && i !== 0) {
+        this.count++;
+      }
+
       // 横列分回す。
       r.forEach((rr: TImages[], ii: number) => {
         // 縦列分回す。
@@ -139,24 +186,28 @@ class Index {
           // 一番最初のデータの処理
           if (ii === 0) {
             // 画像の半径 + 間隔
-            const rate = height / 2 + interval;
+            const rate = height / 2 + intervalHeight;
 
             // 奇数は整数、偶数はマイナスにする。
             const num = checkOddNumber(iii + 1) ? rate : -rate;
 
             // 画像の縦列と横列を配置する
-            polygon.position.set(0 + (500 + interval) * i, num, 0);
+            polygon.position.set(
+              0 + (imageWidth + intervalWidth) * index,
+              num,
+              0
+            );
           } else {
             // 前に置いてある画像の高さの総合 + 間隔
             let h = 0;
 
             // 過去の画像の高さを足す。
             for (let t = 0; t < ii; t++) {
-              h = h + r[t][iii].height + interval * 2;
+              h = h + r[t][iii].height + intervalHeight * 2;
             }
 
             // 画像の高さを一旦フラットにする。
-            let rate = height / 2 + interval;
+            let rate = height / 2 + intervalHeight;
 
             // 前にある画像の高さ分を足す。
             rate = rate + h;
@@ -165,7 +216,11 @@ class Index {
             const num = checkOddNumber(iii + 1) ? rate : -rate;
 
             // 画像の縦列と横列を配置する
-            polygon.position.set(0 + (500 + interval) * i, num, 0);
+            polygon.position.set(
+              0 + (imageWidth + intervalWidth) * index,
+              num,
+              0
+            );
           }
 
           this.scene.add(polygon);

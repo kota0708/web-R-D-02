@@ -35,6 +35,44 @@ export const images: TImages[][][] = [
         polygon: null
       },
       {
+        image: 3,
+        height: 0,
+        polygon: null
+      }
+    ],
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 3,
+        height: 0,
+        polygon: null
+      }
+    ],
+    [
+      {
+        image: 3,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      }
+    ]
+  ],
+  [
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
         image: 1,
         height: 0,
         polygon: null
@@ -47,19 +85,111 @@ export const images: TImages[][][] = [
         polygon: null
       },
       {
-        image: 3,
+        image: 1,
+        height: 0,
+        polygon: null
+      }
+    ]
+  ],
+  [
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 1,
         height: 0,
         polygon: null
       }
     ],
     [
       {
-        image: 3,
+        image: 2,
         height: 0,
         polygon: null
       },
       {
+        image: 1,
+        height: 0,
+        polygon: null
+      }
+    ]
+  ],
+  [
+    [
+      {
         image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 1,
+        height: 0,
+        polygon: null
+      }
+    ],
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 1,
+        height: 0,
+        polygon: null
+      }
+    ]
+  ],
+  [
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 1,
+        height: 0,
+        polygon: null
+      }
+    ],
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 1,
+        height: 0,
+        polygon: null
+      }
+    ]
+  ],
+  [
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 1,
+        height: 0,
+        polygon: null
+      }
+    ],
+    [
+      {
+        image: 2,
+        height: 0,
+        polygon: null
+      },
+      {
+        image: 1,
         height: 0,
         polygon: null
       }
