@@ -21,17 +21,18 @@ class Index {
   private width: number;
   private height: number;
   private el: HTMLCanvasElement;
+  private stats: Stats;
+  private count: number;
+  private promises: Promise<unknown>[];
 
   private renderer: THREE.WebGLRenderer;
   private camera: THREE.PerspectiveCamera;
   private scene: THREE.Scene;
   private light: THREE.DirectionalLight;
   private data: TImages[][][];
-  private stats: Stats;
-
-  private count: number;
-
-  private promises: Promise<unknown>[];
+  private mouse: THREE.Vector2;
+  private raycaster: THREE.Raycaster;
+  private meshs: THREE.Mesh[];
 
   constructor() {
     this.width = window.innerWidth;
@@ -57,13 +58,20 @@ class Index {
 
     this.count = 0;
 
-    this.light = new THREE.DirectionalLight(0xffffff);
+    // メッシュを入れる箱
+    this.meshs = [];
 
+    this.light = new THREE.DirectionalLight(0xffffff);
+    this.mouse = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
+
+    // stats
     this.stats = new Stats();
-    this.stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+    this.stats.showPanel(0);
     document.body.appendChild(this.stats.dom);
 
     this.onResize = this.onResize.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
   }
 
   public async init(): Promise<void> {
@@ -94,6 +102,23 @@ class Index {
 
   private onListener(): void {
     window.addEventListener('resize', this.onResize);
+    this.el.addEventListener('mousemove', this.handleMouseMove);
+  }
+
+  // マウスイベント
+  handleMouseMove(event: any) {
+    const element = event.currentTarget;
+
+    // canvas要素上のXY座標
+    const x = event.clientX - element.offsetLeft;
+    const y = event.clientY - element.offsetTop;
+    // canvas要素の幅・高さ
+    const w = element.offsetWidth;
+    const h = element.offsetHeight;
+
+    // -1〜+1の範囲で現在のマウス座標を登録する
+    this.mouse.x = (x / w) * 2 - 1;
+    this.mouse.y = -(y / h) * 2 + 1;
   }
 
   // リサイズイベント
@@ -138,12 +163,12 @@ class Index {
                   1
                 );
 
-                // 描画するpolygonを取得
-                const polygon = new THREE.Mesh(geometry, material);
+                // 描画するmeshを取得
+                const mesh = new THREE.Mesh(geometry, material);
 
                 // データセット
                 c.height = height;
-                c.polygon = polygon;
+                c.mesh = mesh;
                 c.index = c.image;
 
                 // 終了を返す
@@ -167,8 +192,6 @@ class Index {
 
   // テクスチャーを描画
   private setTexture() {
-    console.log(this.data);
-
     this.data.forEach((r: TImages[][], i: number) => {
       console.log(`${i} ${this.count}`);
 
@@ -184,7 +207,7 @@ class Index {
       r.forEach((rr: TImages[], ii: number) => {
         // 縦列分回す。
         rr.forEach((c: TImages, iii: number) => {
-          const { polygon, height } = c;
+          const { mesh, height } = c;
 
           // 一番最初のデータの処理
           if (ii === 0) {
@@ -195,11 +218,7 @@ class Index {
             const num = checkOddNumber(iii + 1) ? rate : -rate;
 
             // 画像の縦列と横列を配置する
-            polygon.position.set(
-              0 + (imageWidth + intervalWidth) * index,
-              num,
-              0
-            );
+            mesh.position.set(0 + (imageWidth + intervalWidth) * index, num, 0);
           } else {
             // 前に置いてある画像の高さの総合 + 間隔
             let h = 0;
@@ -219,14 +238,11 @@ class Index {
             const num = checkOddNumber(iii + 1) ? rate : -rate;
 
             // 画像の縦列と横列を配置する
-            polygon.position.set(
-              0 + (imageWidth + intervalWidth) * index,
-              num,
-              0
-            );
+            mesh.position.set(0 + (imageWidth + intervalWidth) * index, num, 0);
           }
 
-          this.scene.add(polygon);
+          this.meshs.push(mesh);
+          this.scene.add(mesh);
         });
       });
     });
@@ -236,6 +252,19 @@ class Index {
     // requestAnimationFrame(() => this.tick());
 
     this.stats.begin();
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.meshs);
+
+    // console.log(this.meshs);
+
+    this.meshs.forEach((r: THREE.Mesh) => {
+      if (intersects.length > 0 && r === intersects[0].object) {
+        r.scale.set(2, 2, 1);
+      } else {
+        r.scale.set(1, 1, 1);
+      }
+    });
+
     this.renderer.clear();
 
     this.renderer.render(this.scene, this.camera);
