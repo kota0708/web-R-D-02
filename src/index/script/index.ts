@@ -34,8 +34,21 @@ const images: TImages[][] = [
       height: 0,
       polygon: null
     }
+  ],
+  [
+    {
+      image: 2,
+      height: 0,
+      polygon: null
+    },
+    {
+      image: 3,
+      height: 0,
+      polygon: null
+    }
   ]
 ];
+const interval = 30;
 
 class Index {
   private width: number;
@@ -110,7 +123,7 @@ class Index {
             (texture: THREE.Texture) => {
               const material = new THREE.MeshBasicMaterial({ map: texture });
 
-              this.camera.position.set(0, 0, 1000);
+              this.camera.position.set(0, 0, 6000);
 
               // 画像の比率を取得
               const rate = texture.image.height / texture.image.width;
@@ -124,15 +137,19 @@ class Index {
               // 描画するpolygonを取得
               const polygon = new THREE.Mesh(geometry, material);
 
-              // polygon.position.set(0, 0, 0);
-
-              // this.scene.add(polygon);
-
+              // データセット
               c.height = height;
               c.polygon = polygon;
-              c.index = i;
+              c.index = c.image;
 
               resolve();
+
+              // 非同期デバック
+              // setTimeout(() => {
+              //   console.log('ssss');
+
+              //   resolve();
+              // }, Math.random() * 10000);
             }
           );
         });
@@ -145,9 +162,33 @@ class Index {
   private setTexture() {
     this.data.forEach((r: TImages[], i: number) => {
       r.forEach((c: TImages, ii: number) => {
-        const { polygon } = c;
+        const { polygon, height } = c;
 
-        polygon.position.set(0, 0, 0);
+        if (i === 0) {
+          const rate = height / 2 + interval;
+
+          const num = checkOddNumber(ii + 1) ? rate : -rate;
+
+          polygon.position.set(0, num, 0);
+        } else {
+          // const rate = this.data[i - 1][ii].height;
+
+          let h = 0;
+
+          for (let t = 0; t < i; t++) {
+            h = h + this.data[t][ii].height + interval * 2;
+          }
+
+          console.log(h);
+
+          let rate = height / 2 + interval;
+          rate = rate + h;
+          const num = checkOddNumber(ii + 1) ? rate : -rate;
+
+          console.log(num);
+
+          polygon.position.set(0, num, 0);
+        }
 
         this.scene.add(polygon);
       });
