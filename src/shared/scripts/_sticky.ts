@@ -19,7 +19,7 @@ class Sticky {
   private while: number;
   private time: number;
 
-  constructor (opt: TOpt) {
+  constructor(opt: TOpt) {
     const { parent, child, interval }: TOpt = opt;
 
     this.$$sections = this.makeArray(document.querySelectorAll(parent));
@@ -35,7 +35,7 @@ class Sticky {
     this.time = Date.now();
   }
 
-  public init (): void {
+  public init(): void {
     this.$$sections.forEach((r: HTMLElement, i: number) => {
       const result: TScroll = {
         top: this.offsetTop(r),
@@ -49,19 +49,19 @@ class Sticky {
     this.onListener();
   }
 
-  private onListener (): void {
+  private onListener(): void {
     window.addEventListener('resize', this.onResize);
     window.addEventListener('scroll', this.onScroll);
   }
 
   // スクロールイベント
-  private onScroll (): void {
+  private onScroll(): void {
     this.scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     this.onSicky();
   }
 
   // 追従の処理
-  private onSicky (): void {
+  private onSicky(): void {
     this.sectionsOpt.forEach((r: TScroll) => {
       const $$parent: HTMLElement = r.el;
       const $$child: HTMLElement = r.child;
@@ -110,7 +110,7 @@ class Sticky {
   }
 
   // リサイズの処理
-  private onResize (): void {
+  private onResize(): void {
     const onProcess: () => void = () => {
       this.resetVal();
       this.onSicky();
@@ -120,7 +120,7 @@ class Sticky {
   }
 
   // 要素の値をリセット
-  private resetVal (): void {
+  private resetVal(): void {
     this.$$sections.forEach((r: HTMLElement, i: number) => {
       this.sectionsOpt[i].top = this.offsetTop(r);
       this.sectionsOpt[i].bottom = this.offsetTop(r) + r.clientHeight;

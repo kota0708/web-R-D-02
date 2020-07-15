@@ -5,20 +5,20 @@
  * @returns {Function}
  */
 
-let timer = -1
+let timer = -1;
 
 const debounce: (func: () => void, delay: number) => void = (
   func: () => void,
   delay = 100
 ) => {
   if (delay <= 0) {
-    return func()
+    return func();
   }
 
   if (timer) {
-    window.clearTimeout(timer)
+    window.clearTimeout(timer);
   }
-  timer = window.setTimeout(func, delay)
-}
+  timer = window.setTimeout(func, delay);
+};
 
-export default debounce
+export default debounce;

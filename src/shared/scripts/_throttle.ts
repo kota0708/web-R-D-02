@@ -1,4 +1,4 @@
-let time: number = Date.now()
+let time: number = Date.now();
 
 /**
  * throttle
@@ -10,16 +10,16 @@ const throttle: (func: () => void, duration: number) => void = (
   func: () => void,
   duration = 1000
 ) => {
-  duration = duration / 60
+  duration = duration / 60;
 
   const onResult: () => void = () => {
     if (time + duration - Date.now() < 0) {
-      time = new Date().getTime()
-      func()
+      time = new Date().getTime();
+      func();
     }
-  }
+  };
 
-  return onResult()
-}
+  return onResult();
+};
 
-export default throttle
+export default throttle;

@@ -10,7 +10,7 @@ import { makeArray } from './_make-array';
 
 const hashScroll: (name: string, height?: number) => void = (
   name: string,
-  height: number = 0
+  height = 0
 ) => {
   const $$targets = document.querySelectorAll<HTMLElement>(`.${name}`);
 
