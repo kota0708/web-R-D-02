@@ -3,52 +3,10 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 
 import { checkOddNumber } from '../../shared/scripts/_checkoddNumber';
 
-type TImages = {
-  image: number;
-  height: number;
-  index?: number;
-  polygon: THREE.Mesh | null;
-};
+import { TImages } from './type/_data';
+import { images } from './constants/_data';
 
-const images: TImages[][] = [
-  [
-    {
-      image: 0,
-      height: 0,
-      polygon: null
-    },
-    {
-      image: 1,
-      height: 0,
-      polygon: null
-    }
-  ],
-  [
-    {
-      image: 2,
-      height: 0,
-      polygon: null
-    },
-    {
-      image: 3,
-      height: 0,
-      polygon: null
-    }
-  ],
-  [
-    {
-      image: 2,
-      height: 0,
-      polygon: null
-    },
-    {
-      image: 3,
-      height: 0,
-      polygon: null
-    }
-  ]
-];
-const interval = 30;
+const interval = 80;
 
 class Index {
   private width: number;
@@ -59,7 +17,7 @@ class Index {
   private camera: THREE.PerspectiveCamera;
   private scene: THREE.Scene;
   private light: THREE.DirectionalLight;
-  private data: TImages[][];
+  private data: TImages[][][];
 
   private promises: Promise<unknown>[];
 
@@ -100,97 +58,123 @@ class Index {
     this.renderer.setClearColor(0x000000, 1);
     this.renderer.autoClear = false;
 
+    // 画像の読み込みのデータを取得
     this.setData();
 
+    // 画像を読み込み
     await Promise.all(this.promises);
 
+    // 少し時間を開ける。
     await this.sleep(100);
 
-    console.log(this.data);
-
+    // テクスチャーを描画させる
     this.setTexture();
 
+    // リクエストアニメーションフレームを回す。
     this.tick();
   }
 
   // 描画するデータをまとめる。
   private setData(): void {
-    this.data.forEach((r: TImages[], i: number) => {
-      return r.forEach((c: TImages) => {
-        const result = new Promise((resolve: (value?: unknown) => void) => {
-          new THREE.TextureLoader().load(
-            `image/${c.image}.jpg`,
-            (texture: THREE.Texture) => {
-              const material = new THREE.MeshBasicMaterial({ map: texture });
+    this.data.forEach((r: TImages[][]) => {
+      // 横列分
+      return r.forEach((rr: TImages[], i: number) => {
+        // 縦列分
+        return rr.forEach((c: TImages) => {
+          // 画像の読み込みをするのでPromiseを返すようにする。
+          const result = new Promise((resolve: (value?: unknown) => void) => {
+            // 画像の読み込み
+            new THREE.TextureLoader().load(
+              `image/${c.image}.jpg`,
+              (texture: THREE.Texture) => {
+                const material = new THREE.MeshBasicMaterial({ map: texture });
 
-              this.camera.position.set(0, 0, 6000);
+                this.camera.position.set(0, 0, 6000);
 
-              // 画像の比率を取得
-              const rate = texture.image.height / texture.image.width;
+                // 画像の比率を取得
+                const rate = texture.image.height / texture.image.width;
 
-              // 画像の高さを取得
-              const height = 500 * rate;
+                // 画像の高さを取得
+                const height = 500 * rate;
 
-              // イタポリ
-              const geometry = new THREE.PlaneGeometry(500, height, 1, 1);
+                // イタポリ
+                const geometry = new THREE.PlaneGeometry(500, height, 1, 1);
 
-              // 描画するpolygonを取得
-              const polygon = new THREE.Mesh(geometry, material);
+                // 描画するpolygonを取得
+                const polygon = new THREE.Mesh(geometry, material);
 
-              // データセット
-              c.height = height;
-              c.polygon = polygon;
-              c.index = c.image;
+                // データセット
+                c.height = height;
+                c.polygon = polygon;
+                c.index = c.image;
 
-              resolve();
+                // 終了を返す
+                resolve();
 
-              // 非同期デバック
-              // setTimeout(() => {
-              //   console.log('ssss');
+                // 非同期デバック
+                // setTimeout(() => {
+                //   console.log('ssss');
 
-              //   resolve();
-              // }, Math.random() * 10000);
-            }
-          );
+                //   resolve();
+                // }, Math.random() * 10000);
+              }
+            );
+          });
+
+          this.promises[i] = result;
         });
-
-        this.promises[i] = result;
       });
     });
   }
 
+  // テクスチャーを描画
   private setTexture() {
-    this.data.forEach((r: TImages[], i: number) => {
-      r.forEach((c: TImages, ii: number) => {
-        const { polygon, height } = c;
+    this.data.forEach((r: TImages[][], iii: number) => {
+      // 横列分回す。
+      r.forEach((rr: TImages[], i: number) => {
+        // 縦列分回す。
+        rr.forEach((c: TImages, ii: number) => {
+          const { polygon, height } = c;
 
-        if (i === 0) {
-          const rate = height / 2 + interval;
+          // 一番最初のデータの処理
+          if (i === 0) {
+            // 画像の半径 + 間隔
+            const rate = height / 2 + interval;
 
-          const num = checkOddNumber(ii + 1) ? rate : -rate;
+            // 奇数は整数、偶数はマイナスにする。
+            // 縦列
+            const num = checkOddNumber(ii + 1) ? rate : -rate;
 
-          polygon.position.set(0, num, 0);
-        } else {
-          // const rate = this.data[i - 1][ii].height;
+            // 画像の縦列と横列を配置する
+            // 最高
+            polygon.position.set(0 + (500 + interval) * iii, num, 0);
+          } else {
+            // 前に置いてある画像の高さの総合 + 間隔
+            let h = 0;
 
-          let h = 0;
+            // 過去の画像の高さを足す。
+            // 横列
+            for (let t = 0; t < i; t++) {
+              h = h + r[t][ii].height + interval * 2;
+            }
 
-          for (let t = 0; t < i; t++) {
-            h = h + this.data[t][ii].height + interval * 2;
+            // 画像の高さを一旦フラットにする。
+            let rate = height / 2 + interval;
+
+            // 前にある画像の高さ分を足す。
+            rate = rate + h;
+
+            // 画像の縦列を配置
+            // 縦列
+            const num = checkOddNumber(ii + 1) ? rate : -rate;
+
+            // 画像の縦列と横列を配置する
+            // 最高
+            polygon.position.set(0 + (500 + interval) * iii, num, 0);
           }
 
-          console.log(h);
-
-          let rate = height / 2 + interval;
-          rate = rate + h;
-          const num = checkOddNumber(ii + 1) ? rate : -rate;
-
-          console.log(num);
-
-          polygon.position.set(0, num, 0);
-        }
-
-        this.scene.add(polygon);
+          this.scene.add(polygon);
+        });
       });
     });
   }
