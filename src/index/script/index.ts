@@ -137,6 +137,7 @@ class Index {
           const { polygon, height } = c;
 
           // 一番最初のデータの処理
+          // 横列
           if (i === 0) {
             // 画像の半径 + 間隔
             const rate = height / 2 + interval;
@@ -155,6 +156,7 @@ class Index {
             // 過去の画像の高さを足す。
             // 横列
             for (let t = 0; t < i; t++) {
+              // 縦列
               h = h + r[t][ii].height + interval * 2;
             }
 
