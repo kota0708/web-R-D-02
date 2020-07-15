@@ -129,35 +129,30 @@ class Index {
 
   // テクスチャーを描画
   private setTexture() {
-    this.data.forEach((r: TImages[][], iii: number) => {
+    this.data.forEach((r: TImages[][], i: number) => {
       // 横列分回す。
-      r.forEach((rr: TImages[], i: number) => {
+      r.forEach((rr: TImages[], ii: number) => {
         // 縦列分回す。
-        rr.forEach((c: TImages, ii: number) => {
+        rr.forEach((c: TImages, iii: number) => {
           const { polygon, height } = c;
 
           // 一番最初のデータの処理
-          // 横列
-          if (i === 0) {
+          if (ii === 0) {
             // 画像の半径 + 間隔
             const rate = height / 2 + interval;
 
             // 奇数は整数、偶数はマイナスにする。
-            // 縦列
-            const num = checkOddNumber(ii + 1) ? rate : -rate;
+            const num = checkOddNumber(iii + 1) ? rate : -rate;
 
             // 画像の縦列と横列を配置する
-            // 最高
-            polygon.position.set(0 + (500 + interval) * iii, num, 0);
+            polygon.position.set(0 + (500 + interval) * i, num, 0);
           } else {
             // 前に置いてある画像の高さの総合 + 間隔
             let h = 0;
 
             // 過去の画像の高さを足す。
-            // 横列
-            for (let t = 0; t < i; t++) {
-              // 縦列
-              h = h + r[t][ii].height + interval * 2;
+            for (let t = 0; t < ii; t++) {
+              h = h + r[t][iii].height + interval * 2;
             }
 
             // 画像の高さを一旦フラットにする。
@@ -167,12 +162,10 @@ class Index {
             rate = rate + h;
 
             // 画像の縦列を配置
-            // 縦列
-            const num = checkOddNumber(ii + 1) ? rate : -rate;
+            const num = checkOddNumber(iii + 1) ? rate : -rate;
 
             // 画像の縦列と横列を配置する
-            // 最高
-            polygon.position.set(0 + (500 + interval) * iii, num, 0);
+            polygon.position.set(0 + (500 + interval) * i, num, 0);
           }
 
           this.scene.add(polygon);
