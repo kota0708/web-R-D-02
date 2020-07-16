@@ -1,6 +1,7 @@
 precision mediump float;
 
 uniform float uTrans;
+uniform float uOpacity;
 uniform sampler2D uTexture;
 uniform vec2 uResolution;
 uniform vec2 uImageResolution;
@@ -21,7 +22,7 @@ void main(){
   );
   
   
-  vec4 _texture2=texture2D(uTexture,vec2(.5,.5)+(uv-vec2(.5))*uTrans);
+  vec3 _texture2=texture2D(uTexture,vec2(.5,.5)+(uv-vec2(.5))*uTrans).rgb;
   
-  gl_FragColor=_texture2;
+  gl_FragColor=vec4(_texture2, uOpacity);
 }

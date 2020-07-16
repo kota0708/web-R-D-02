@@ -1,2 +1,56 @@
 @import '../../shared/styles/import';
 @import '../../shared/icons/css/icons';
+
+.toggle {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  top: 40px;
+  right: 60px;
+  transition: 0.3s;
+  opacity: 0;
+  pointer-events: none;
+
+  &.display {
+    opacity: 1;
+    cursor: pointer;
+    pointer-events: all;
+  }
+
+  @include largeScreenWidthLess() {
+    width: 30px;
+    height: 30px;
+    top: 20px;
+    right: 30px;
+  }
+}
+
+.toggle-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+
+  &::before {
+    content: '';
+    width: 100%;
+    height: 2px;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    background-color: #000;
+    transform: rotate(45deg);
+    transform-origin: center;
+  }
+
+  &::after {
+    content: '';
+    width: 100%;
+    height: 2px;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    background-color: #000;
+    transform: rotate(-45deg);
+    transform-origin: center;
+  }
+}
