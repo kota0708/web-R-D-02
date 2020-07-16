@@ -2,6 +2,7 @@ import * as THREE from 'Three';
 import Stats from 'stats.js';
 import gsap from 'gsap';
 import Hammer from 'hammerjs';
+import Tweakpane from 'tweakpane';
 
 import vertexShader from './gl/vertexShader.vert';
 import fragmentShader from './gl/fragmentShader.frag';
@@ -264,7 +265,7 @@ class Index {
           y: this.camera.position.y,
           z: 100,
           duration: 1,
-          delay: 0.4,
+          delay: 0.2,
           ease: 'expo.out'
         });
 
@@ -286,7 +287,7 @@ class Index {
               (height / (this.camera.position.z / 1000)),
           ease: 'expo.out',
           duration: 1,
-          delay: 0.2,
+          delay: 0.4,
           onUpdate: () => {
             mesh.scale.set(r.scaleX, r.scaleY, 1);
           }
@@ -578,3 +579,14 @@ class Index {
 
 const index = new Index();
 index.init();
+
+const pane = new Tweakpane({
+  title: 'scale'
+});
+
+pane.addInput(index, 'scale', {
+  label: 'scale',
+  step: 0.1,
+  min: 1,
+  max: 2000
+});
