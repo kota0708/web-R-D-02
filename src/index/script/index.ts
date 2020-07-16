@@ -2,17 +2,14 @@ import * as THREE from 'Three';
 import Stats from 'stats.js';
 import gsap from 'gsap';
 
-import vert from './gl/vertexShader.vert';
-import frag from './gl/fragmentShader.frag';
+import vertexShader from './gl/vertexShader.vert';
+import fragmentShader from './gl/fragmentShader.frag';
 
 import { checkOddNumber } from '../../shared/scripts/_checkoddNumber';
 import { sleep } from '../../shared/scripts/_sleep';
 
 import { TImages } from './type/_data';
 import { images } from './constants/_data';
-
-console.log(vert);
-console.log(frag);
 
 // 画像の横幅
 const imageWidth = 500;
@@ -151,7 +148,28 @@ class Index {
             new THREE.TextureLoader().load(
               `image/${c.image}.jpg`,
               (texture: THREE.Texture) => {
-                const material = new THREE.MeshBasicMaterial({ map: texture });
+                // const material = new THREE.MeshBasicMaterial({ map: texture });
+
+                const material = new THREE.ShaderMaterial({
+                  uniforms: {
+                    uTexture: { value: texture },
+                    uTrans: { value: 1 },
+                    uResolution: {
+                      value: new THREE.Vector2(
+                        texture.image.width,
+                        texture.image.height
+                      )
+                    },
+                    uImageResolution: {
+                      value: new THREE.Vector2(
+                        texture.image.width,
+                        texture.image.height
+                      )
+                    }
+                  },
+                  vertexShader,
+                  fragmentShader
+                });
 
                 this.camera.position.set(0, 0, 6000);
 
@@ -163,14 +181,16 @@ class Index {
 
                 // イタポリ
                 const geometry = new THREE.PlaneGeometry(
-                  imageWidth,
-                  height,
+                  imageWidth * 3,
+                  height * 3,
                   1,
                   1
                 );
 
                 // 描画するmeshを取得
                 const mesh = new THREE.Mesh(geometry, material);
+
+                mesh.scale.set(0.333333, 0.333333, 1);
 
                 // データセット
                 c.height = height;
@@ -263,11 +283,11 @@ class Index {
 
     // console.log(this.meshs);
 
-    this.meshs.forEach((r: THREE.Mesh) => {
+    this.meshs.forEach((r: any) => {
       if (intersects.length > 0 && r === intersects[0].object) {
-        r.scale.set(2, 2, 1);
+        r.material.uniforms.uTrans.value = 0.8;
       } else {
-        r.scale.set(1, 1, 1);
+        r.material.uniforms.uTrans.value = 1;
       }
     });
 
