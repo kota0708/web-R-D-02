@@ -135,12 +135,14 @@ class Index {
     await Promise.all(this.promises);
 
     // 少し時間を開ける。
-    await sleep(100);
+    await sleep(500);
 
     // テクスチャーを描画させる
     this.setTexture();
 
-    this.onListener();
+    setTimeout(() => {
+      this.onListener();
+    }, 2500);
 
     // リクエストアニメーションフレームを回す。
 
@@ -173,6 +175,8 @@ class Index {
         this.isPan = true;
         this.mouseData.x = this.camera.position.x;
         this.mouseData.y = this.camera.position.y;
+
+        this.el.classList.add('grabbing');
       }
 
       gsap.to(this.move, {
@@ -186,7 +190,8 @@ class Index {
 
       this.panTimer = window.setTimeout(() => {
         this.isPan = false;
-      }, 500);
+        this.el.classList.remove('grabbing');
+      }, 200);
     });
   }
 
@@ -264,9 +269,8 @@ class Index {
           x: this.camera.position.x,
           y: this.camera.position.y,
           z: 100,
-          duration: 1,
-          delay: 0.2,
-          ease: 'expo.out'
+          duration: 0.6,
+          delay: 0.2
         });
 
         const isWidth = !!(width > height);
@@ -285,11 +289,10 @@ class Index {
             : (window.innerHeight +
                 (window.screen.height - window.innerHeight)) /
               (height / (this.camera.position.z / 1000)),
-          ease: 'expo.out',
-          duration: 1,
-          delay: 0.4,
+          duration: 0.6,
+          delay: 0.1,
           onUpdate: () => {
-            mesh.scale.set(r.scaleX, r.scaleY, 1);
+            mesh.scale.set(r.scaleX, r.scaleY, 10);
           }
         });
 
@@ -566,10 +569,19 @@ class Index {
       }
     });
 
+    if (intersects.length > 0 && !this.isCheck) {
+      this.el.classList.add('pointer');
+    } else {
+      this.el.classList.remove('pointer');
+    }
+
     this.renderer.clear();
 
     if (!this.isCheck) {
       this.camera.position.set(this.move.x, this.move.y, 1000 + this.scale);
+      this.el.classList.remove('normal');
+    } else {
+      this.el.classList.add('normal');
     }
 
     this.renderer.render(this.scene, this.camera);
