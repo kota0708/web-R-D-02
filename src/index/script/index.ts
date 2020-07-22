@@ -8,7 +8,6 @@ import vertexShader from './gl/vertexShader.vert';
 import fragmentShader from './gl/fragmentShader.frag';
 
 import { checkOddNumber } from '../../shared/scripts/_checkoddNumber';
-import { sleep } from '../../shared/scripts/_sleep';
 import { getDevice } from '../../shared/scripts/_ua';
 
 import { TImages } from './type/_data';
@@ -29,8 +28,6 @@ type TMeshData = {
   isAniamtion: boolean;
   width: number;
   height: number;
-  scaleX: number;
-  scaleY: number;
   opacity: number;
   positions: THREE.Vector3;
 };
@@ -62,18 +59,20 @@ class Index {
   private panTimer: number;
   private ua: string;
   private scale: number;
+  private dist: number;
 
   constructor() {
+    // ウインドウサイズを格納
     this.width = window.innerWidth;
     this.height = window.innerHeight;
-    this.el = document.getElementById('app');
-    this.toggle = document.getElementById('js-toggle');
 
-    this.data = images;
+    // element
+    this.el = document.getElementById('app'); // canvas
+    this.toggle = document.getElementById('js-toggle'); // closeボタン
 
-    this.isCheck = false;
-
-    this.ua = getDevice();
+    this.data = images; // テクスチャーのデータ
+    this.isCheck = false; // 画像がクリックされているか確認
+    this.ua = getDevice(); // ユーザーエージェントを取得
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.el as HTMLCanvasElement
@@ -81,23 +80,31 @@ class Index {
 
     this.scene = new THREE.Scene();
 
-    this.promises = [];
+    this.promises = []; // 画像の読み込みのPromise
+
+    // カメラの距離をwindowの縦幅に合わせる処理
+    const fov = 60;
+    const fovRad = (fov / 2) * (Math.PI / 180); // 視野角をラジアンに変換
+    this.dist = this.height / 2 / Math.tan(fovRad); // ウィンドウぴったりのカメラ距離
 
     this.camera = new THREE.PerspectiveCamera(
       60,
       this.width / this.height,
       1,
-      10000
+      this.dist * 2
     );
 
+    // hammer
     this.hammer = new Hammer(this.el);
     this.hammer.get('pan').set({ enable: true });
     this.hammer.get('pinch').set({ enable: true });
     this.isPan = false;
     this.panTimer = -1;
 
+    // 拡大率
     this.scale = 0;
 
+    // テクスチャーを中央にするために使うカウント
     this.count = 0;
 
     // メッシュを入れる箱
@@ -134,9 +141,6 @@ class Index {
     // 画像を読み込み
     await Promise.all(this.promises);
 
-    // 少し時間を開ける。
-    await sleep(500);
-
     // テクスチャーを描画させる
     this.setTexture();
 
@@ -154,47 +158,14 @@ class Index {
     window.addEventListener('resize', this.onResize);
     this.el.addEventListener('mousemove', this.onMouseMove);
     this.el.addEventListener('click', this.onClick);
-
     this.toggle.addEventListener('click', this.onClickRemove);
-
-    this.hammer.on('pinch', (e: any) => {
-      if (this.isPan && this.isCheck) {
-        return;
-      }
-
-      this.scale +=
-        e.additionalEvent === 'pinchin' ? e.scale * -20 : e.scale * 5;
-    });
-
-    this.hammer.on('pan', (e: HammerInput) => {
-      if (this.isCheck) {
-        return;
-      }
-
-      if (!this.isPan) {
-        this.isPan = true;
-        this.mouseData.x = this.camera.position.x;
-        this.mouseData.y = this.camera.position.y;
-
-        this.el.classList.add('grabbing');
-      }
-
-      gsap.to(this.move, {
-        x: this.mouseData.x - e.deltaX * 2,
-        y: this.mouseData.y + e.deltaY * 2,
-        duration: 1,
-        ease: 'power4.out'
-      });
-
-      window.clearTimeout(this.panTimer);
-
-      this.panTimer = window.setTimeout(() => {
-        this.isPan = false;
-        this.el.classList.remove('grabbing');
-      }, 200);
-    });
+    this.hammer.on('pinch', (e: any) => this.onPinch(e));
+    this.hammer.on('pan', (e: HammerInput) => this.onPan(e));
   }
 
+  /**
+   * 画像表示を元に戻す処理
+   */
   private onClickRemove(): void {
     if (!this.isCheck) {
       return;
@@ -238,6 +209,53 @@ class Index {
     this.isCheck = false;
   }
 
+  /**
+   * Panの処理
+   * @param e hammerの返り血
+   */
+  private onPan(e: HammerInput): void {
+    if (this.isCheck) {
+      return;
+    }
+
+    if (!this.isPan) {
+      this.isPan = true;
+      this.mouseData.x = this.camera.position.x;
+      this.mouseData.y = this.camera.position.y;
+
+      this.el.classList.add('grabbing');
+    }
+
+    gsap.to(this.move, {
+      x: this.mouseData.x - e.deltaX * 2,
+      y: this.mouseData.y + e.deltaY * 2,
+      duration: 1,
+      ease: 'power4.out'
+    });
+
+    window.clearTimeout(this.panTimer);
+
+    this.panTimer = window.setTimeout(() => {
+      this.isPan = false;
+      this.el.classList.remove('grabbing');
+    }, 200);
+  }
+
+  /**
+   * ピンチの処理
+   * @param e hammerの返り血
+   */
+  private onPinch(e: any): void {
+    if (this.isPan && this.isCheck) {
+      return;
+    }
+
+    this.scale += e.additionalEvent === 'pinchin' ? e.scale * -20 : e.scale * 5;
+  }
+
+  /**
+   * クリックイベント
+   */
   private onClick(event: any): void {
     if (this.isCheck || this.isPan) {
       return;
@@ -265,39 +283,39 @@ class Index {
       const { mesh, width, height } = r;
 
       if (intersects.length > 0 && mesh === intersects[0].object) {
+        // meshの位置をカメラの中心の位置にする
         gsap.to(mesh.position, {
           x: this.camera.position.x,
           y: this.camera.position.y,
-          z: 100,
+          z: 1,
           duration: 0.6,
           delay: 0.2
         });
 
+        // 横、縦を図る。
         const isWidth = !!(width > height);
+
+        // ウインドウサイズ分をサイズを大きくする
         gsap.to(r, {
           scaleX: isWidth
-            ? (window.innerWidth +
-                (window.screen.height - window.innerHeight) * 2) /
-              (width / (this.camera.position.z / 1000))
-            : (window.innerHeight +
-                (window.screen.height - window.innerHeight)) /
-              (height / (this.camera.position.z / 1000)),
+            ? window.innerWidth / width
+            : window.innerHeight / height,
           scaleY: isWidth
-            ? (window.innerWidth +
-                (window.screen.height - window.innerHeight) * 2) /
-              (width / (this.camera.position.z / 1000))
-            : (window.innerHeight +
-                (window.screen.height - window.innerHeight)) /
-              (height / (this.camera.position.z / 1000)),
+            ? window.innerWidth / width
+            : window.innerHeight / height,
           duration: 0.6,
           delay: 0.1,
           onUpdate: () => {
-            mesh.scale.set(r.scaleX, r.scaleY, 10);
+            mesh.scale.set(r.scaleX, r.scaleY, 1);
           }
         });
 
+        console.log(r);
+
+        // アニメーションしているmesh
         r.isAniamtion = true;
       } else if (intersects.length > 0 && mesh) {
+        // 選んだ以外のメッシュを消す
         gsap.to(r, {
           opacity: 0,
           duration: 0.5,
@@ -309,6 +327,7 @@ class Index {
       }
     });
 
+    // ちゃんとmeshをクリックしたか確認
     if (intersects.length > 0) {
       this.toggle.classList.add('display');
 
@@ -345,6 +364,10 @@ class Index {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
 
+    const fov = 60;
+    const fovRad = (fov / 2) * (Math.PI / 180); // 視野角をラジアンに変換
+    this.dist = this.height / 2 / Math.tan(fovRad); // ウィンドウぴったりのカメラ距離
+
     this.renderer.setSize(this.width, this.height);
 
     this.camera.aspect = this.width / this.height;
@@ -355,7 +378,7 @@ class Index {
   private setData(): void {
     this.data.forEach((r: TImages[][]) => {
       // 横列分
-      r.forEach((rr: TImages[], i: number) => {
+      r.forEach((rr: TImages[]) => {
         // 縦列分
         rr.forEach((c: TImages) => {
           // 画像の読み込みをするのでPromiseを返すようにする。
@@ -389,7 +412,7 @@ class Index {
                   transparent: true
                 });
 
-                this.camera.position.set(0, 0, 6000);
+                this.camera.position.set(0, 0, this.dist);
 
                 this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
@@ -407,17 +430,15 @@ class Index {
                   1
                 );
 
-                console.log(geometry);
-
                 // 描画するmeshを取得
                 const mesh = new THREE.Mesh(geometry, material);
-
-                // mesh.scale.set(0.5, 0.5, 1);
 
                 // データセット
                 c.height = height;
                 c.mesh = mesh;
                 c.index = c.image;
+
+                console.log('官僚');
 
                 // 終了を返す
                 resolve();
@@ -432,7 +453,7 @@ class Index {
             );
           });
 
-          this.promises[i] = result;
+          this.promises.push(result);
         });
       });
     });
@@ -501,10 +522,10 @@ class Index {
               mesh.position.y,
               mesh.position.z
             ),
-            scaleX: 0,
-            scaleY: 0,
             opacity: 1
           });
+
+          // 初期時のscaleのアニメーション
 
           const anim = {
             opacity: 0,
@@ -569,6 +590,7 @@ class Index {
       }
     });
 
+    // カーソルの処理
     if (intersects.length > 0 && !this.isCheck) {
       this.el.classList.add('pointer');
     } else {
@@ -578,10 +600,10 @@ class Index {
     this.renderer.clear();
 
     if (!this.isCheck) {
-      this.camera.position.set(this.move.x, this.move.y, 1000 + this.scale);
-      this.el.classList.remove('normal');
+      this.camera.position.set(this.move.x, this.move.y, this.dist); // カメラ
+      this.el.classList.remove('normal'); // カーソルを通常のを外す
     } else {
-      this.el.classList.add('normal');
+      this.el.classList.add('normal'); // カーソルを通常のに戻す
     }
 
     this.renderer.render(this.scene, this.camera);
