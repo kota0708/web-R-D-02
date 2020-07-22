@@ -438,8 +438,6 @@ class Index {
                 c.mesh = mesh;
                 c.index = c.image;
 
-                console.log('官僚');
-
                 // 終了を返す
                 resolve();
 
