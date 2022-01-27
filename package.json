@@ -122,7 +122,7 @@
     "react-hot-loader": "^4.12.21",
     "ress": "^2.0.4",
     "stats.js": "^0.17.0",
-    "three": "^0.118.3",
+    "three": "^0.137.0",
     "tweakpane": "^1.5.3"
   },
   "browserslist": [
